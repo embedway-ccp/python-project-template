@@ -38,7 +38,10 @@ sys.path.insert(0, os.path.abspath('.'))
 CODE_DIRECTORY = '$package'
 DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
-PYTEST_FLAGS = ['--doctest-modules']
+BUILD_DIRECTORY = 'build'
+PYTEST_FLAGS = ['--junit-xml=' + os.path.join(BUILD_DIRECTORY, 'pytest_log.xml')]
+# Add extra source code directories if needed.
+SRC_DIRECTORIES = []
 
 # Import metadata. Normally this would just be:
 #

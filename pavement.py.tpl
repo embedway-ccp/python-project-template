@@ -6,15 +6,17 @@ import os
 import sys
 import time
 import subprocess
+import shutil
 
 # Import parameters from the setup file.
 sys.path.append('.')
 from setup import (
     setup_dict, get_project_files, print_success_message,
     print_failure_message, _lint, _test, _test_all,
-    CODE_DIRECTORY, DOCS_DIRECTORY, TESTS_DIRECTORY, PYTEST_FLAGS)
+    CODE_DIRECTORY, DOCS_DIRECTORY, TESTS_DIRECTORY, PYTEST_FLAGS,
+    SRC_DIRECTORIES, BUILD_DIRECTORY)
 
-from paver.easy import options, task, needs, consume_args
+from paver.easy import options, task, needs, consume_args, path
 from paver.setuputils import install_distutils_tasks
 
 options(setup=setup_dict)
@@ -129,7 +131,7 @@ def run(args):
     # executable. So we just pass the package name in as the executable name,
     # since it's close enough. This should never be seen by an end user
     # installing through Setuptools anyway.
-    from $package.main import main
+    from vtdu_server.main import main
     raise SystemExit(main([CODE_DIRECTORY] + args))
 
 
@@ -146,15 +148,20 @@ def commit():
 def coverage():
     """Run tests and show test coverage report."""
     try:
-        import pytest_cov  # NOQA
+        import imp  # NOQA
+        imp.find_module('pytest_cov')
     except ImportError:
         print_failure_message(
             'Install the pytest coverage plugin to use this task, '
             "i.e., `pip install pytest-cov'.")
         raise SystemExit(1)
     import pytest
-    pytest.main(PYTEST_FLAGS + [
-        '--cov', CODE_DIRECTORY,
+    src_dir_args = ['--cov', CODE_DIRECTORY]
+    for d in SRC_DIRECTORIES:
+        src_dir_args.append('--cov')
+        src_dir_args.append(d)
+    print_success_message(str(src_dir_args))
+    pytest.main(PYTEST_FLAGS + src_dir_args + [
         '--cov-report', 'term-missing',
         TESTS_DIRECTORY])
 
@@ -255,3 +262,56 @@ def doc_clean():
 
     if retcode:
         raise SystemExit(retcode)
+
+
+module_txt = \
+'''.
+=
+
+.. toctree::
+    :maxdepth: 4
+
+'''
+
+
+@task
+def doc_rst():
+    """Build .rst files for sphinx docs."""
+    dst_dir = os.path.join(DOCS_DIRECTORY, 'source')
+    sub_dirs = SRC_DIRECTORIES + [CODE_DIRECTORY]
+    sub_files = map(lambda x: x + '.rst', sub_dirs) + ['modules.rst']
+    src_files = map(lambda x: os.path.join(BUILD_DIRECTORY, x), sub_files)
+    dst_files = map(lambda x: os.path.join(DOCS_DIRECTORY, 'source', x), sub_files)
+    # clean the build files
+    for f in src_files:
+        if os.path.exists(f):
+            os.remove(f)
+    # create rst files
+    for d in sub_dirs:
+        cmd = ['sphinx-apidoc', d, '-f', '-o', BUILD_DIRECTORY]
+        subprocess.call(cmd)
+    # create modules.rst
+    txt = module_txt
+    for d in sub_dirs:
+        txt += '    {0}\n'.format(d)
+    fd = open(os.path.join(BUILD_DIRECTORY, 'modules.rst'), 'w')
+    fd.write(txt)
+    fd.close()
+    # move rst files
+    for i in range(len(sub_files)):
+        shutil.move(src_files[i], dst_files[i])
+
+
+@task
+@needs('doc_clean')
+def clean():
+    """Clean the project."""
+    path('.cache').rmtree()
+    path('build').rmtree()
+    path('dist').rmtree()
+    path('vtdu_server'+'.egg-info').rmtree()
+    test_cache = path('tests') / '__pycache__'
+    test_cache.rmtree()
+    pycs = path('.').walkfiles('*.pyc')
+    for f in pycs:
+        f.remove()

@@ -2,10 +2,7 @@
  Python Project Template
 =========================
 
-.. image:: https://travis-ci.org/seanfisk/python-project-template.png
-   :target: https://travis-ci.org/seanfisk/python-project-template
-
-This project provides a best-practices template Python project which integrates several different tools. It saves you work by setting up a number of things, including documentation, code checking, and unit test runners.
+This project is created from Python Project Template. It integrates several different tools. It saves you work by setting up a number of things, including documentation, code checking, and unit test runners.
 
 As it is an all-in-one solution, the tools used are rather opinionated. They include:
 
@@ -43,7 +40,7 @@ Instructions
         git clone https://github.com/seanfisk/python-project-template.git my-project
         cd my-project
 
-#. Edit the metadata file ``my_module/metadata.py`` to correctly describe your project.
+#. Edit the metadata file ``project_name/metadata.py`` to correctly describe your project.
 
 #. Generate files based upon the project metadata you just entered::
 

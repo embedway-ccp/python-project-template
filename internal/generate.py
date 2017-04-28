@@ -34,8 +34,8 @@ def main():
         os.path.realpath(__file__)))
     os.chdir(project_root)
 
-    sys.path.insert(0, os.path.realpath('my_module'))
-    # Can't use `from my_module import metadata' since `__init__.py' is
+    sys.path.insert(0, os.path.realpath('project_name'))
+    # Can't use `from project_name import metadata' since `__init__.py' is
     # templated.
     import metadata
 
@@ -73,16 +73,13 @@ def main():
             # Remove the template file.
             os.remove(tpl_path)
 
-    print('Renaming the package: my_module ->', metadata.package)
-    os.rename('my_module', metadata.package)
+    print('Renaming the package: project_name ->', metadata.package)
+    os.rename('project_name', metadata.package)
 
     print('Making main script executable...')
     main_py_path = os.path.join(metadata.package, 'main.py')
     # This is a no-op on Windows.
     os.chmod(main_py_path, os.stat(main_py_path).st_mode | stat.S_IXUSR)
-
-    print('Removing internal Travis-CI test file...')
-    os.remove('.travis.yml')
 
     print("Revising `LICENSE' file...")
     # Open file for reading and writing.

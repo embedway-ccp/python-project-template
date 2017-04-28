@@ -57,7 +57,7 @@ def main(argv):
     # Copy the metadata file if that was requested. Must happen after the git
     # checkout.
     if args.metadata_path:
-        dest_metadata_path = os.path.join('my_module', 'metadata.py')
+        dest_metadata_path = os.path.join('project_name', 'metadata.py')
         shutil.copyfile(source_metadata_path, dest_metadata_path)
 
     # Run generation. Instead of importing we run directly with python. Too
